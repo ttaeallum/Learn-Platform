@@ -2,9 +2,31 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import rateLimit from "express-rate-limit";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+const PostgresStore = connectPg(session);
+import adminAuthRouter from "./routes/admin-auth";
+import adminRouter from "./routes/admin";
+import authRouter from "./routes/auth";
+import publicCoursesRouter from "./routes/public-courses";
+import accessRouter from "./routes/access";
+import webhooksRouter from "./routes/webhooks";
+import paymentsRouter from "./routes/payments";
+import courseContentRouter from "./routes/course-content";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 
 const app = express();
 const httpServer = createServer(app);
+
+// Rate limiting for security
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: "Many requests from this IP, please try again later",
+});
+app.use("/api/", limiter);
 
 declare module "http" {
   interface IncomingMessage {
@@ -21,6 +43,45 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false }));
+
+app.set("trust proxy", 1);
+
+app.use(
+  session({
+    store: new PostgresStore({
+      conString: process.env.DATABASE_URL,
+      tableName: "session",
+      createTableIfMissing: true,
+    }),
+    secret: process.env.SESSION_SECRET || "dev-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days for better UX
+    },
+  })
+);
+
+app.use("/api/admin", adminAuthRouter);
+app.use("/api/admin-panel", adminRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/courses", publicCoursesRouter);
+app.use("/api/access", accessRouter);
+app.use("/api/webhooks", webhooksRouter);
+app.use("/api/payments", paymentsRouter);
+app.use("/api/course-content", courseContentRouter);
+
+app.get("/api/health/db", async (_req, res) => {
+  try {
+    await db.execute(sql`select 1`);
+    res.json({ ok: true, db: "connected" });
+  } catch (e) {
+    res.status(500).json({ ok: false, db: "not connected", error: String(e) });
+  }
+});
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -89,12 +150,11 @@ app.use((req, res, next) => {
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || "5000", 10);
+  const port = parseInt(process.env.PORT || "3001", 10);
   httpServer.listen(
     {
       port,
       host: "0.0.0.0",
-      reusePort: true,
     },
     () => {
       log(`serving on port ${port}`);

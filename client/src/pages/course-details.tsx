@@ -1,131 +1,190 @@
+import { useQuery } from "@tanstack/react-query";
+import { useParams, Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { courses } from "@/lib/mock-data";
-import { Link, useRoute } from "wouter";
-import { Clock, BookOpen, Star, Users, CheckCircle, Share2, Play, PlayCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  PlayCircle,
+  Clock,
+  BookOpen,
+  Users,
+  Star,
+  Lock,
+  CheckCircle2
+} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export default function CourseDetails() {
-  const [, params] = useRoute("/course/:id");
-  const courseId = params?.id || "1";
-  const course = courses.find(c => c.id === courseId) || courses[0];
+export default function CourseDetail() {
+  const { slug } = useParams();
+  const [, setLocation] = useLocation();
+
+  const { data: course, isLoading } = useQuery({
+    queryKey: ["course", slug],
+    queryFn: async () => {
+      const res = await fetch(`/api/courses/${slug}`);
+      if (!res.ok) throw new Error("Failed to fetch course");
+      return res.json();
+    },
+  });
+
+  const { data: user } = useQuery({
+    queryKey: ["auth-me"],
+    queryFn: async () => {
+      const res = await fetch("/api/auth/me");
+      if (!res.ok) return null;
+      return res.json();
+    },
+    retry: false
+  });
+
+  const { data: access } = useQuery({
+    queryKey: ["course-access", course?.id],
+    enabled: !!course?.id && !!user,
+    queryFn: async () => {
+      const res = await fetch(`/api/access/course/${course.id}`);
+      if (!res.ok) return { allowed: false };
+      return res.json();
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container py-12 px-4 md:px-8 max-w-screen-2xl space-y-8">
+          <Skeleton className="h-64 rounded-3xl w-full" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div className="md:col-span-2 space-y-4">
+              <Skeleton className="h-10 w-2/3" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!course) {
+    return (
+      <Layout>
+        <div className="container py-24 text-center">
+          <h1 className="text-2xl font-bold">الكورس غير موجود</h1>
+          <Link href="/courses">
+            <Button className="mt-4">تصفح المكتبة</Button>
+          </Link>
+        </div>
+      </Layout>
+    );
+  }
+
+  const handleStartLearning = () => {
+    if (!user) {
+      setLocation(`/auth?next=/courses/${slug}`);
+      return;
+    }
+
+    if (access?.allowed) {
+      setLocation(`/learn/${course.id}`);
+    } else {
+      setLocation(`/checkout/${course.id}`);
+    }
+  };
 
   return (
     <Layout>
-      <div className="bg-zinc-900 text-white py-12 md:py-16">
+      {/* Course Hero */}
+      <div className="bg-muted/30 border-b border-border/40 py-12 lg:py-20" dir="rtl">
         <div className="container px-4 md:px-8 max-w-screen-2xl">
-          <div className="flex flex-col md:flex-row gap-8 items-start">
-            <div className="flex-1 space-y-6">
-              <div className="flex gap-2">
-                <Badge className="bg-primary hover:bg-primary/90 text-white border-none">{course.category}</Badge>
-                <Badge variant="outline" className="text-zinc-300 border-zinc-700">{course.level}</Badge>
+          <div className="flex flex-col lg:flex-row gap-12 items-start">
+            <div className="flex-1 space-y-6 text-right">
+              <div className="flex flex-wrap gap-2 justify-end lg:justify-start">
+                <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+                  {course.category?.name || "عام"}
+                </Badge>
+                <Badge variant="outline">{course.level === "beginner" ? "مبتدئ" : course.level === "intermediate" ? "متوسط" : "متقدم"}</Badge>
               </div>
-              
-              <h1 className="text-3xl md:text-5xl font-heading font-bold leading-tight">{course.title}</h1>
-              <p className="text-lg text-zinc-300 max-w-3xl">
-                تعلم المهارات الأساسية والمتقدمة في هذا المجال مع شرح عملي وتطبيقي. هذا الكورس سيأخذك من الصفر وحتى الاحتراف بخطوات مدروسة.
+
+              <h1 className="text-3xl md:text-5xl font-heading font-black leading-tight">
+                {course.title}
+              </h1>
+
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                {course.description}
               </p>
-              
-              <div className="flex items-center gap-6 text-sm md:text-base text-zinc-300">
-                <span className="flex items-center gap-2"><Star className="w-5 h-5 text-yellow-500 fill-yellow-500" /> {course.rating} تقييم</span>
-                <span className="flex items-center gap-2"><Users className="w-5 h-5" /> {course.students} طالب</span>
-                <span className="flex items-center gap-2"><Clock className="w-5 h-5" /> {course.duration}</span>
+
+              <div className="flex flex-wrap gap-6 items-center text-sm font-medium text-foreground/80 pt-4">
+                <span className="flex items-center gap-2"><Users className="w-5 h-5 text-primary" /> 1,240 طالب</span>
+                <span className="flex items-center gap-2"><Star className="w-5 h-5 text-yellow-500 fill-yellow-500" /> 4.9 (230 تقييم)</span>
+                <span className="flex items-center gap-2"><Clock className="w-5 h-5 text-primary" /> 12 ساعة محتوى</span>
               </div>
-              
-              <div className="flex items-center gap-3 pt-4">
-                <div className="w-10 h-10 rounded-full bg-zinc-700 flex items-center justify-center font-bold">
-                  {course.instructor.charAt(0)}
+
+              <div className="flex items-center gap-4 pt-6">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20">
+                  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt={course.instructor} />
                 </div>
                 <div>
-                  <p className="text-sm text-zinc-400">المدرب</p>
-                  <p className="font-medium">{course.instructor}</p>
+                  <p className="text-sm text-muted-foreground">مدرس الدورة</p>
+                  <p className="font-bold">{course.instructor}</p>
                 </div>
               </div>
             </div>
-            
-            <div className="w-full md:w-[400px] bg-white text-zinc-900 rounded-2xl overflow-hidden shadow-2xl shrink-0 md:mt-10 lg:mt-0">
-               <div className="relative aspect-video bg-zinc-200 group cursor-pointer">
-                 <img src={course.image} className="w-full h-full object-cover" alt={course.title} />
-                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors">
-                   <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center pl-1 shadow-lg group-hover:scale-110 transition-transform">
-                     <Play className="w-6 h-6 text-primary fill-current" />
-                   </div>
-                 </div>
-               </div>
-               <div className="p-6">
-                 <div className="flex justify-between items-center mb-6">
-                   <span className="text-3xl font-bold">{course.price === 0 ? "49 ر.س" : `${course.price} ر.س`}</span>
-                   <span className="text-sm text-muted-foreground line-through">199 ر.س</span>
-                 </div>
-                 
-                 <Link href={`/lesson/${course.id}`}>
-                   <Button className="w-full h-12 text-lg font-bold mb-3 shadow-lg shadow-primary/20">
-                     اشترك الآن
-                   </Button>
-                 </Link>
-                 <p className="text-center text-xs text-muted-foreground mb-6">ضمان استرداد الأموال لمدة 14 يوم</p>
-                 
-                 <div className="space-y-3">
-                   <p className="font-bold text-sm">ماذا يتضمن الكورس؟</p>
-                   {[
-                     `${course.lessonsCount} درس فيديو عالي الجودة`,
-                     "ملفات ومصادر للتحميل",
-                     "وصول مدى الحياة",
-                     "شهادة إتمام معتمدة"
-                   ].map((item, i) => (
-                     <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                       <CheckCircle className="w-4 h-4 text-primary shrink-0" />
-                       {item}
-                     </div>
-                   ))}
-                 </div>
-               </div>
+
+            <div className="w-full lg:w-[450px] shrink-0 sticky top-24">
+              <div className="bg-card border-2 border-border/40 rounded-3xl overflow-hidden shadow-2xl">
+                <div className="relative aspect-video">
+                  <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer group">
+                    <PlayCircle className="w-16 h-16 text-white group-hover:scale-110 transition-transform" />
+                  </div>
+                </div>
+                <div className="p-8 space-y-6 text-right">
+                  <div className="flex items-baseline gap-2 justify-end">
+                    <span className="text-4xl font-black text-primary">{course.price} ر.س</span>
+                    {course.price > 0 && <span className="text-muted-foreground line-through">450 ر.س</span>}
+                  </div>
+
+                  <div className="space-y-3">
+                    <Button onClick={handleStartLearning} className="w-full h-14 text-lg font-bold gap-3 shadow-xl shadow-primary/20">
+                      {access?.allowed ? (
+                        <>
+                          <PlayCircle className="w-5 h-5" />
+                          متابعة التعلم
+                        </>
+                      ) : (
+                        <>
+                          {user ? <Lock className="w-5 h-5" /> : null}
+                          {user ? "اشترك الآن للوصول" : "سجل دخولك للبدء"}
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-xs text-center text-muted-foreground">ضمان استرجاع الأموال لمدة 30 يوماً</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container px-4 md:px-8 max-w-screen-2xl py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          <div className="lg:col-span-2 space-y-12">
-            <section>
-              <h2 className="text-2xl font-bold mb-4">عن هذا الكورس</h2>
-              <div className="prose max-w-none text-muted-foreground leading-relaxed">
-                <p>
-                  في هذا الكورس الشامل، ستتعلم كل ما تحتاجه للبدء في هذا المجال. تم تصميم المحتوى بعناية ليناسب جميع المستويات، بدءاً من الأساسيات وصولاً إلى التقنيات المتقدمة.
-                </p>
-                <p className="mt-4">
-                  سيقوم المدرب بشرح المفاهيم النظرية ثم الانتقال مباشرة إلى التطبيق العملي من خلال مشاريع حقيقية ستقوم ببنائها خطوة بخطوة.
-                </p>
-              </div>
-            </section>
+      <div className="container px-4 md:px-8 max-w-screen-2xl py-16" dir="rtl">
+        <Tabs defaultValue="overview" className="space-y-12">
+          <TabsList className="w-full justify-start bg-transparent border-b rounded-none p-0 h-auto gap-8">
+            <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent pb-4 px-0 text-lg font-bold">نظرة عامة</TabsTrigger>
+            <TabsTrigger value="curriculum" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent pb-4 px-0 text-lg font-bold">المنهاج</TabsTrigger>
+          </TabsList>
 
-            <section>
-              <h2 className="text-2xl font-bold mb-6">محتوى الكورس</h2>
-              <div className="border border-border/50 rounded-xl divide-y divide-border/50">
-                {[1, 2, 3, 4].map((module) => (
-                  <div key={module} className="p-4">
-                    <div className="flex justify-between items-center mb-2 font-medium">
-                      <h3>الوحدة {module}: أساسيات ومفاهيم</h3>
-                      <span className="text-sm text-muted-foreground">4 دروس • 45 دقيقة</span>
-                    </div>
-                    <div className="space-y-2 mt-4 pl-4 border-r-2 border-border/50 mr-2 pr-4">
-                      {[1, 2, 3].map((lesson) => (
-                        <div key={lesson} className="flex items-center justify-between text-sm py-2 hover:bg-muted/30 rounded px-2 cursor-pointer transition-colors">
-                          <div className="flex items-center gap-3">
-                            <PlayCircle className="w-4 h-4 text-muted-foreground" />
-                            <span>الدرس {lesson}: مقدمة وشرح عام</span>
-                          </div>
-                          <span className="text-muted-foreground text-xs">12:30</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </div>
-        </div>
+          <TabsContent value="overview">
+            <div className="max-w-3xl space-y-8">
+              <section className="space-y-4">
+                <h3 className="text-2xl font-bold">وصف الدورة</h3>
+                <p className="text-muted-foreground leading-relaxed text-lg">
+                  {course.description}
+                </p>
+              </section>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );

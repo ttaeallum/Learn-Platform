@@ -1,14 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout";
 import { CourseCard } from "@/components/ui/course-card";
-import { courses, tracks } from "@/lib/mock-data";
+import { tracks } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, PlayCircle, CheckCircle2, Zap, BookOpen, Clock } from "lucide-react";
+import { ArrowLeft, PlayCircle, BookOpen, Clock } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
-  const featuredCourses = courses.slice(0, 4);
+  const { data: featuredCourses, isLoading } = useQuery({
+    queryKey: ["featured-courses"],
+    queryFn: async () => {
+      const res = await fetch("/api/courses/featured");
+      if (!res.ok) throw new Error("Failed to fetch featured courses");
+      return res.json();
+    },
+  });
 
   return (
     <Layout>
@@ -17,7 +26,7 @@ export default function Home() {
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
         <div className="absolute -top-20 -right-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-20 w-72 h-72 bg-emerald-400/10 rounded-full blur-3xl"></div>
-        
+
         <div className="container relative z-10 px-4 md:px-8 max-w-screen-2xl">
           <div className="flex flex-col md:flex-row items-center gap-12 md:gap-20">
             <div className="flex-1 text-center md:text-right">
@@ -25,77 +34,51 @@ export default function Home() {
                 🚀 منصة التعليم الأولى في الشرق الأوسط
               </Badge>
               <h1 className="font-heading font-black text-4xl md:text-6xl lg:text-7xl leading-tight text-foreground mb-6">
-                استثمر في <span className="text-primary relative">
-                  مستقبلك
+                تعلّم — <span className="text-primary relative">
+                  منصة تعلم
                   <svg className="absolute w-full h-3 -bottom-1 right-0 text-emerald-400/30" viewBox="0 0 100 10" preserveAspectRatio="none">
-                    <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="8" fill="none" />
+                    <path d="M0 5 Q 25 0, 50 5 T 100 5" fill="none" stroke="currentColor" strokeWidth="2" />
                   </svg>
-                </span> <br />
-                وتعلم مهارات جديدة
+                </span> إلكتروني متميزة
               </h1>
-              <p className="text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl mx-auto md:mx-0">
-                انضم إلى آلاف المتعلمين وطور مهاراتك في البرمجة، التصميم، التسويق، وإدارة الأعمال مع نخبة من الخبراء العرب.
+              <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl leading-relaxed">
+                تعلّم هي منصة تعلم إلكتروني عربية تقدم كورسات ومسارات عملية في البرمجة والتقنية، مع مشاريع تطبيقية تساعدك على التعلم من الصفر حتى الاحتراف.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                 <Link href="/pricing">
-                  <Button size="lg" className="h-14 px-8 text-lg shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all rounded-xl">
-                    ابدأ تجربتك المجانية
-                    <ArrowLeft className="mr-2 h-5 w-5" />
+                  <Button size="lg" className="h-14 px-8 text-lg font-bold shadow-xl shadow-primary/20">
+                    45 ريال — ادفع الآن
                   </Button>
                 </Link>
                 <Link href="/courses">
-                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-2 hover:bg-muted/50 rounded-xl">
-                    تصفح الكورسات
-                    <PlayCircle className="mr-2 h-5 w-5" />
-                  </Button>
+                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold">تصفح الكورسات</Button>
                 </Link>
               </div>
-              <div className="mt-10 flex items-center justify-center md:justify-start gap-6 text-sm text-muted-foreground font-medium">
-                <span className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  شهادات معتمدة
-                </span>
-                <span className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  مدربون محترفون
-                </span>
-                <span className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                  محتوى متجدد
-                </span>
-              </div>
             </div>
-            
-            <div className="flex-1 w-full max-w-lg md:max-w-none relative">
-              <div className="relative z-10 bg-white dark:bg-card rounded-2xl p-4 shadow-2xl shadow-black/5 rotate-3 hover:rotate-0 transition-transform duration-500 border border-border/50">
-                <img 
-                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80" 
-                  alt="Students learning" 
-                  className="rounded-xl w-full object-cover aspect-[4/3]"
+            <div className="flex-1 relative">
+              <div className="relative z-10 rounded-3xl overflow-hidden shadow-2xl border border-border/50">
+                <img
+                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80"
+                  alt="Learning"
+                  className="w-full h-auto"
                 />
-                <div className="absolute -bottom-6 -left-6 bg-white dark:bg-card p-4 rounded-xl shadow-xl border border-border/50 flex items-center gap-4 animate-bounce duration-[3000ms]">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <Zap className="w-6 h-6 fill-current" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-lg">50+</p>
-                    <p className="text-xs text-muted-foreground">دورة جديدة شهرياً</p>
-                  </div>
-                </div>
               </div>
-              <div className="absolute inset-0 bg-primary rounded-2xl transform translate-x-4 translate-y-4 -z-10 opacity-20 blur-sm"></div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-background">
+      <section className="py-24 bg-background">
         <div className="container px-4 md:px-8 max-w-screen-2xl">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 italic">لماذا تختار منصة تعلّم؟</h2>
+            <p className="text-muted-foreground text-lg">نحن نوفر لك كل ما تحتاجه للنجاح في سوق العمل التقني.</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: Zap, title: "تعلم بسرعة", desc: "محتوى مكثف ومركز يوصلك للهدف بأقصر وقت ممكن دون حشو." },
-              { icon: CheckCircle2, title: "جودة عالية", desc: "فيديوهات بجودة 4K وصوت نقي مع مونتاج احترافي لتجربة مريحة." },
+              { icon: BookOpen, title: "محتوى عربي متميز", desc: "نقدم لك شروحات عميقة باللغة العربية تجمع بين السهولة والدقة العلمية." },
+              { icon: Clock, title: "تعلم في أي وقت", desc: "وصول غير محدود لجميع الكورسات والدروس، تعلم بالسرعة التي تناسب جدولك." },
               { icon: PlayCircle, title: "تطبيق عملي", desc: "مشاريع حقيقية وتطبيقات عملية تضمن لك فهم المادة العلمية." }
             ].map((feature, i) => (
               <div key={i} className="bg-muted/30 p-8 rounded-2xl border border-border/50 hover:border-primary/50 transition-colors group">
@@ -110,7 +93,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Tracks Section */}
+      {/* Tracks Section (Static for now) */}
       <section className="py-20 bg-muted/20 border-y border-border/40">
         <div className="container px-4 md:px-8 max-w-screen-2xl">
           <div className="flex justify-between items-end mb-12">
@@ -124,10 +107,10 @@ export default function Home() {
               </Button>
             </Link>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {tracks.map((track) => (
-               <Link key={track.id} href={`/tracks`}>
+              <Link key={track.id} href={`/tracks`}>
                 <div className="group cursor-pointer bg-card rounded-2xl overflow-hidden border border-border/50 hover:shadow-xl transition-all duration-300">
                   <div className="relative h-48 overflow-hidden">
                     <img src={track.image} alt={track.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
@@ -149,19 +132,13 @@ export default function Home() {
               </Link>
             ))}
           </div>
-          
-           <div className="mt-8 text-center md:hidden">
-            <Link href="/tracks">
-              <Button variant="outline" className="w-full">عرض كل المسارات</Button>
-            </Link>
-          </div>
         </div>
       </section>
 
-      {/* Courses Section */}
+      {/* Dynamic Courses Section */}
       <section className="py-20 bg-background">
         <div className="container px-4 md:px-8 max-w-screen-2xl">
-           <div className="flex justify-between items-end mb-12">
+          <div className="flex justify-between items-end mb-12">
             <div>
               <h2 className="text-3xl font-heading font-bold mb-2">أحدث الكورسات</h2>
               <p className="text-muted-foreground">اكتشف أحدث ما تم إضافته للمنصة</p>
@@ -172,11 +149,30 @@ export default function Home() {
               </Button>
             </Link>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredCourses.map((course) => (
-              <CourseCard key={course.id} course={course} />
-            ))}
+            {isLoading ? (
+              [1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-[350px] rounded-xl" />
+              ))
+            ) : featuredCourses?.length > 0 ? (
+              featuredCourses.map((course: any) => (
+                <CourseCard
+                  key={course.id}
+                  course={{
+                    ...course,
+                    image: course.thumbnail || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&q=80",
+                    category: course.category?.name || "عام",
+                    duration: "متنوع",
+                    lessonsCount: 0,
+                    rating: 5.0,
+                    students: 0
+                  }}
+                />
+              ))
+            ) : (
+              <p className="col-span-full text-center text-muted-foreground">لا توجد كورسات متاحة حالياً.</p>
+            )}
           </div>
         </div>
       </section>
@@ -190,8 +186,12 @@ export default function Home() {
             احصل على وصول غير محدود لجميع الكورسات والمسارات باشتراك واحد بسيط.
           </p>
           <Link href="/pricing">
-             <Button size="lg" variant="secondary" className="h-16 px-10 text-xl font-bold text-primary hover:bg-white rounded-xl shadow-2xl">
-              اشترك الآن بـ 49 ر.س/شهر
+            <Button
+              size="lg"
+              variant="secondary"
+              className="h-16 px-10 text-xl font-bold text-primary hover:bg-white rounded-xl shadow-2xl"
+            >
+              اشترك الآن بـ 45 ر.س/شهر
             </Button>
           </Link>
           <p className="mt-6 text-sm text-primary-foreground/60">يمكنك إلغاء الاشتراك في أي وقت.</p>

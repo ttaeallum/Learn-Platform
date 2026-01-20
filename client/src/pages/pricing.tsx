@@ -1,6 +1,7 @@
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Check, HelpCircle } from "lucide-react";
+import { Link } from "wouter";
 import {
   Accordion,
   AccordionContent,
@@ -23,14 +24,18 @@ export default function Pricing() {
             <div className="p-8 md:p-12">
               <h3 className="text-2xl font-bold text-muted-foreground mb-4">الاشتراك الشهري</h3>
               <div className="flex items-baseline justify-center gap-2 mb-8">
-                <span className="text-6xl font-black text-foreground">49</span>
+                <span className="text-6xl font-black text-foreground">45</span>
                 <span className="text-xl text-muted-foreground font-medium">ر.س / شهر</span>
               </div>
-              
-              <Button className="w-full h-14 text-lg font-bold rounded-xl mb-8 shadow-lg shadow-primary/20">
-                اشترك الآن وابدأ التعلم
-              </Button>
-              
+
+              <Link href="/checkout/subscription">
+                <Button
+                  className="w-full h-14 text-lg font-bold rounded-xl mb-8 shadow-lg shadow-primary/20"
+                >
+                  45 ريال — ادفع الآن
+                </Button>
+              </Link>
+
               <div className="space-y-4 text-right">
                 {[
                   "وصول غير محدود لجميع الكورسات",
