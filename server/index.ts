@@ -56,11 +56,12 @@ app.use(
     secret: process.env.SESSION_SECRET || "dev-secret",
     resave: false,
     saveUninitialized: false,
+    proxy: true, // Required for Render/HTTPS
     cookie: {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days for better UX
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     },
   })
 );
