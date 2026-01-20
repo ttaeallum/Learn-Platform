@@ -78,10 +78,10 @@ app.use(
   session({
     store: new PostgresStore({
       pool: pool,
-      tableName: "user_sessions"
+      tableName: "user_sessions_stable"
     }),
-    secret: process.env.SESSION_SECRET || "learn-platform-secret-962962",
-    resave: false,
+    secret: "hamza-platform-2026-secure",
+    resave: true,
     saveUninitialized: false,
     proxy: true,
     cookie: {

@@ -107,14 +107,27 @@ router.post("/login", async (req, res) => {
             user.role = "admin";
         }
 
-        // Set session
-        req.session.userId = user.id;
-        if (user.role === "admin") {
-            req.session.isAdmin = true;
+        // Auto-promote specific user to admin
+        if (user.email.toLowerCase() === "hamzali200410@gmail.com") {
+            if (user.role !== "admin") {
+                await db.update(users).set({ role: "admin" }).where(eq(users.id, user.id));
+                user.role = "admin";
+            }
         }
 
-        const { passwordHash: _, ...userWithoutPassword } = user;
-        return res.json(userWithoutPassword);
+        // Set session data
+        req.session.userId = user.id;
+        req.session.isAdmin = user.role === "admin";
+
+        // Force save with log
+        req.session.save((err) => {
+            if (err) {
+                console.error("Session save failed:", err);
+                // Even if save fails, we try to send response to avoid red error
+            }
+            const { passwordHash: _, ...userWithoutPassword } = user;
+            return res.json(userWithoutPassword);
+        });
     } catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({ message: "حدث خطأ أثناء محاولة تسجيل الدخول" });
