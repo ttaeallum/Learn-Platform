@@ -46,7 +46,7 @@ app.use(
 async function ensureSessionTable() {
   try {
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS "session" (
+      CREATE TABLE IF NOT EXISTS "user_sessions" (
         "sid" varchar NOT NULL COLLATE "default",
         "sess" json NOT NULL,
         "expire" timestamp(6) NOT NULL
@@ -54,12 +54,12 @@ async function ensureSessionTable() {
       
       DO $$ 
       BEGIN 
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'session_pkey') THEN
-          ALTER TABLE "session" ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'user_sessions_pkey') THEN
+          ALTER TABLE "user_sessions" ADD CONSTRAINT "user_sessions_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
         END IF;
       END $$;
 
-      CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+      CREATE INDEX IF NOT EXISTS "IDX_user_sessions_expire" ON "user_sessions" ("expire");
     `);
     console.log("Session table verified/created");
   } catch (err) {
@@ -76,10 +76,10 @@ app.use(
   session({
     store: new PostgresStore({
       pool: pool,
-      tableName: "session"
+      tableName: "user_sessions"
     }),
-    secret: process.env.SESSION_SECRET || "hard-to-guess-secret-2026",
-    resave: true, // Set to true to force save
+    secret: process.env.SESSION_SECRET || "learn-platform-secret-962962",
+    resave: false,
     saveUninitialized: false,
     proxy: true,
     cookie: {

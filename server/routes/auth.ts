@@ -64,15 +64,8 @@ router.post("/register", async (req, res) => {
             req.session.isAdmin = true;
         }
 
-        // Force save session before response
-        req.session.save((err) => {
-            if (err) {
-                console.error("Session save error:", err);
-                return res.status(500).json({ message: "خطأ في حفظ الجلسة" });
-            }
-            const { passwordHash: _, ...userWithoutPassword } = newUser;
-            return res.status(201).json(userWithoutPassword);
-        });
+        const { passwordHash: _, ...userWithoutPassword } = newUser;
+        return res.status(201).json(userWithoutPassword);
     } catch (error) {
         console.error("Registration error:", error);
         return res.status(500).json({ message: "حدث خطأ أثناء عملية التسجيل" });
@@ -114,15 +107,8 @@ router.post("/login", async (req, res) => {
             req.session.isAdmin = true;
         }
 
-        // Force save session before response
-        req.session.save((err) => {
-            if (err) {
-                console.error("Session save error:", err);
-                return res.status(500).json({ message: "خطأ في حفظ الجلسة" });
-            }
-            const { passwordHash: _, ...userWithoutPassword } = user;
-            return res.json(userWithoutPassword);
-        });
+        const { passwordHash: _, ...userWithoutPassword } = user;
+        return res.json(userWithoutPassword);
     } catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({ message: "حدث خطأ أثناء محاولة تسجيل الدخول" });
