@@ -20,6 +20,8 @@ import { sql } from "drizzle-orm";
 const app = express();
 const httpServer = createServer(app);
 
+console.log("--- SERVER STARTED: VERSION 5.0 (FINAL FIX) ---");
+
 // Rate limiting for security
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

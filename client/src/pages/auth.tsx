@@ -42,7 +42,7 @@ export default function Auth() {
       } else {
         const data = await response.json();
         toast({
-          title: "فشل الدخول",
+          title: "فشل الدخول (الإصدار الجديد)",
           description: data.message || "البريد الإلكتروني أو كلمة المرور غير صحيحة",
           variant: "destructive"
         });
