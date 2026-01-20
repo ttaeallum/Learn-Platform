@@ -76,11 +76,10 @@ app.use(
   session({
     store: new PostgresStore({
       pool: pool,
-      tableName: "session",
-      createTableIfMissing: true,
+      tableName: "session"
     }),
-    secret: process.env.SESSION_SECRET || "prod-secret-2026",
-    resave: false,
+    secret: process.env.SESSION_SECRET || "hard-to-guess-secret-2026",
+    resave: true, // Set to true to force save
     saveUninitialized: false,
     proxy: true,
     cookie: {
