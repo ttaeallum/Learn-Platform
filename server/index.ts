@@ -44,7 +44,7 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
 
 app.use(
   session({
@@ -53,14 +53,14 @@ app.use(
       tableName: "session",
       createTableIfMissing: true,
     }),
-    secret: process.env.SESSION_SECRET || "dev-secret",
+    secret: process.env.SESSION_SECRET || "prod-secret-2026",
     resave: false,
     saveUninitialized: false,
-    proxy: true, // Required for Render/HTTPS
+    proxy: true,
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       maxAge: 30 * 24 * 60 * 60 * 1000,
     },
   })
