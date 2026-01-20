@@ -14,7 +14,7 @@ import accessRouter from "./routes/access";
 import webhooksRouter from "./routes/webhooks";
 import paymentsRouter from "./routes/payments";
 import courseContentRouter from "./routes/course-content";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { sql } from "drizzle-orm";
 
 const app = express();
@@ -49,7 +49,7 @@ app.set("trust proxy", true);
 app.use(
   session({
     store: new PostgresStore({
-      conString: process.env.DATABASE_URL,
+      pool: pool,
       tableName: "session",
       createTableIfMissing: true,
     }),
