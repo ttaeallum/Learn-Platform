@@ -78,7 +78,7 @@ app.use(
   session({
     store: new PostgresStore({
       pool: pool,
-      tableName: "user_sessions_stable"
+      tableName: "user_sessions"
     }),
     secret: "hamza-platform-2026-secure",
     resave: true,
@@ -87,7 +87,7 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     },
   })

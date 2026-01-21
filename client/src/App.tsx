@@ -21,6 +21,10 @@ import AdminCategories from "@/pages/admin-categories";
 import AdminUsers from "@/pages/admin-users";
 import Blog from "@/pages/blog";
 import AdminLogin from "@/pages/admin-login";
+import FAQ from "@/pages/faq";
+import Contact from "@/pages/contact";
+import Terms from "@/pages/terms";
+import Privacy from "@/pages/privacy";
 
 function Router() {
   return (
@@ -57,6 +61,10 @@ function Router() {
       <Route path="/admin/login" component={AdminLogin} />
 
       <Route path="/blog" component={Blog} />
+      <Route path="/faq" component={FAQ} />
+      <Route path="/contact" component={Contact} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy" component={Privacy} />
       <Route component={NotFound} />
     </Switch>
   );
